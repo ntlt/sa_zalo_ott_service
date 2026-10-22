@@ -8,37 +8,39 @@ interface AppProps {
 }
 
 const Auth = ({ submitLable, onSubmit, children }: AppProps) => {
-
     const [username, setUsername] = React.useState('');
     const [password, setPassword] = React.useState('');
-    
+
     return (
-        <Stack 
-            spacing={3} 
-            sx ={{
-                width: "300px", 
+        <Stack
+            spacing={3}
+            sx={{
+                width: "300px",
                 maxWidth: "100%",
-                margin: "0 auto", 
-                marginTop: "100px", 
-                justifyContent: "center", 
-                alignItems: "center" }}>
-                    <TextField 
-                        label="Username" 
-                        variant="outlined" 
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
-                    <TextField 
-                        label="Password" 
-                        type="password" 
-                        variant="outlined" 
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <Button variant="contained" color="primary" onClick={() => onSubmit({ username, password })}>
-                        {submitLable}
-                    </Button>
-                    {children}
+                margin: "0 auto",
+                marginTop: "100px",
+                justifyContent: "center",
+                alignItems: "center"
+            }}>
+            <TextField
+                label="Username"
+                variant="outlined"
+                fullWidth
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+            />
+            <TextField
+                label="Password"
+                type="password"
+                variant="outlined"
+                fullWidth
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+            />
+            <Button variant="contained" color="primary" fullWidth onClick={() => onSubmit({ username, password })}>
+                {submitLable}
+            </Button>
+            {children}
         </Stack>
     );
 };
