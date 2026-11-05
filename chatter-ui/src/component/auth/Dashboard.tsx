@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Avatar,
   Badge,
@@ -146,11 +146,60 @@ const initialConversations: Conversation[] = [
   },
 ];
 
+const CONVERSATIONS_STORAGE_KEY = "chatter.conversations";
+
+const isChatMessage = (value: unknown): value is ChatMessage => {
+  if (typeof value !== "object" || value === null) return false;
+  const message = value as Record<string, unknown>;
+  return (
+    typeof message.id === "number" &&
+    typeof message.text === "string" &&
+    typeof message.time === "string" &&
+    typeof message.isMine === "boolean"
+  );
+};
+
+const isConversation = (value: unknown): value is Conversation => {
+  if (typeof value !== "object" || value === null) return false;
+  const conversation = value as Record<string, unknown>;
+  return (
+    typeof conversation.id === "number" &&
+    typeof conversation.name === "string" &&
+    typeof conversation.initials === "string" &&
+    typeof conversation.color === "string" &&
+    typeof conversation.preview === "string" &&
+    typeof conversation.time === "string" &&
+    typeof conversation.unread === "number" &&
+    typeof conversation.online === "boolean" &&
+    typeof conversation.group === "boolean" &&
+    Array.isArray(conversation.messages) &&
+    conversation.messages.every(isChatMessage)
+  );
+};
+
+const loadConversations = (): Conversation[] => {
+  if (process.env.NODE_ENV === "development") return initialConversations;
+
+  try {
+    const stored = window.localStorage.getItem(CONVERSATIONS_STORAGE_KEY);
+    if (stored === null) return initialConversations;
+
+    const parsed: unknown = JSON.parse(stored);
+    if (Array.isArray(parsed) && parsed.every(isConversation)) return parsed;
+
+    console.error("Saved conversations have an invalid format.");
+  } catch (error) {
+    console.error("Failed to load saved conversations:", error);
+  }
+
+  return initialConversations;
+};
+
 type Section = "messages" | "contacts" | "groups";
 
 const Dashboard = () => {
   const isMobile = useMediaQuery("(max-width:760px)");
-  const [conversations, setConversations] = useState(initialConversations);
+  const [conversations, setConversations] = useState(loadConversations);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "unread" | "groups">("all");
@@ -158,6 +207,19 @@ const Dashboard = () => {
   const [activeSection, setActiveSection] = useState<Section>("messages");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newConversationName, setNewConversationName] = useState("");
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") return;
+
+    try {
+      window.localStorage.setItem(
+        CONVERSATIONS_STORAGE_KEY,
+        JSON.stringify(conversations),
+      );
+    } catch (error) {
+      console.error("Failed to save conversations:", error);
+    }
+  }, [conversations]);
 
   const navItems = [
     { id: "messages" as const, label: "Tin nhắn", icon: <ChatRoundedIcon /> },
@@ -660,8 +722,6 @@ const Dashboard = () => {
               </Tooltip>
               <InputBase
                 fullWidth
-                multiline
-                maxRows={4}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder="Nhập tin nhắn..."
@@ -724,7 +784,7 @@ const Dashboard = () => {
               label="Tên người nhận"
               value={newConversationName}
               onChange={(event) => setNewConversationName(event.target.value)}
-              inputProps={{ maxLength: 80 }}
+              slotProps={{ htmlInput: { maxLength: 80 } }}
               required
             />
           </DialogContent>
