@@ -1,0 +1,17 @@
+{
+  "name": "sa_zalo_ott_service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@nestjs/config": "^12.0.1",
+    "@nestjs/mongoose": "^12.0.0",
+    "mongoose": "^9.11.3"
+  }
+}
