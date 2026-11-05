@@ -7,6 +7,8 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './common/database/database.module.js';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { UsersModule } from './users/users.module.js';
+import { AppResolver } from './app.resolver.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -27,8 +29,9 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       sortSchema: true,
     }),
     DatabaseModule,
+    UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AppResolver],
 })
 export class AppModule {}
