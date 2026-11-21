@@ -5,6 +5,7 @@ import { graphqlRequest } from "./services/graphql";
 
 jest.mock("./services/graphql", () => ({
   graphqlRequest: jest.fn(),
+  getAccessToken: jest.fn(() => null),
 }));
 
 jest.mock("@mui/material/Dialog", () => ({
@@ -78,6 +79,7 @@ test("opens a direct conversation by looking up the recipient email", async () =
       return { myConversations: [directConversation] };
     }
     if (query.includes("UserByEmail")) return { userByEmail: otherUser };
+    if (query.includes("CallHistory")) return { callHistory: [] };
     return { openDirectConversation: { id: directConversation.id } };
   });
   renderDashboard();
