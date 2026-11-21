@@ -1,13 +1,17 @@
 param(
-    [string]$Region = "ap-southeast-2",
+    [string]$Region = "ap-southeast-1",
     [string]$KeyName = "sa-zalo-ott-key",
+    [string]$KeyFile = "",
     [string]$SecurityGroupName = "sa-zalo-ott-sg",
     [string]$InstanceName = "sa-zalo-ott-server"
 )
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
-$KeyFile = Join-Path $RepoRoot "$KeyName.pem"
+$ProvidedKeyFile = $KeyFile.Trim() -ne ""
+if (-not $ProvidedKeyFile) {
+    $KeyFile = Join-Path $RepoRoot "$KeyName.pem"
+}
 
 $AwsFound = Get-Command aws -ErrorAction SilentlyContinue
 $AwsCmd = if ($AwsFound) { $AwsFound.Source } else { $null }
@@ -28,12 +32,19 @@ Write-Host "    Authenticated as AWS Account: $($Identity.Account) ($($Identity.
 
 # 1. Select Free-Tier eligible instance type in region
 Write-Host "==> Detecting Free-Tier eligible EC2 instance type in $Region..." -ForegroundColor Cyan
+$PrevEap = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
 $FreeTypesText = (& $AwsCmd ec2 describe-instance-types `
     --region $Region `
     --filters "Name=free-tier-eligible,Values=true" "Name=processor-info.supported-architecture,Values=x86_64" `
     --query "InstanceTypes[].InstanceType" `
-    --output text)
-$FreeTypes = @($FreeTypesText -split "\s+" | Where-Object { $_ })
+    --output text 2>$null)
+$FreeTypesExit = $LASTEXITCODE
+$ErrorActionPreference = $PrevEap
+$FreeTypes = if ($FreeTypesExit -eq 0) { @($FreeTypesText -split "\s+" | Where-Object { $_ }) } else { @() }
+if ($FreeTypesExit -ne 0) {
+    Write-Host "    Cannot query Free-Tier types (possibly blocked by organization policy); using t3.micro." -ForegroundColor Yellow
+}
 $InstanceType = if ($FreeTypes -contains "t3.small") {
     "t3.small"
 } elseif ($FreeTypes -contains "t3.micro") {
@@ -49,13 +60,39 @@ Write-Host "    Selected Instance Type: $InstanceType" -ForegroundColor Green
 
 # 2. Resolve latest official Ubuntu 24.04 LTS AMI
 Write-Host "==> Resolving latest Ubuntu 24.04 LTS AMI..." -ForegroundColor Cyan
-$AmiId = (& $AwsCmd ssm get-parameter `
+$PrevEap = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+$SsmOutput = @(& $AwsCmd ssm get-parameter `
     --region $Region `
     --name "/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id" `
     --query "Parameter.Value" `
-    --output text).Trim()
+    --output text 2>$null)
+$SsmExit = $LASTEXITCODE
+$ErrorActionPreference = $PrevEap
+$AmiId = if ($SsmExit -eq 0) { ([string]($SsmOutput -join "`n")).Trim() } else { "" }
+
 if (-not $AmiId -or $AmiId -notmatch "^ami-") {
-    throw "Failed to resolve Ubuntu 24.04 AMI in $Region."
+    Write-Host "    SSM public parameter is blocked; resolving AMI through EC2 DescribeImages..." -ForegroundColor Yellow
+    $PrevEap = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $ImageLookup = (& $AwsCmd ec2 describe-images `
+        --region $Region `
+        --owners "099720165015" `
+        --filters `
+            "Name=name,Values=ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*" `
+            "Name=state,Values=available" `
+            "Name=architecture,Values=x86_64" `
+            "Name=root-device-type,Values=ebs" `
+            "Name=virtualization-type,Values=hvm" `
+        --query "sort_by(Images,&CreationDate)[-1].ImageId" `
+        --output text 2>$null)
+    $ImageLookupExit = $LASTEXITCODE
+    $ErrorActionPreference = $PrevEap
+    $AmiId = if ($ImageLookupExit -eq 0) { ([string]$ImageLookup).Trim() } else { "" }
+}
+
+if (-not $AmiId -or $AmiId -notmatch "^ami-") {
+    throw "Could not resolve the Ubuntu 24.04 AMI in $Region. This account needs ec2:DescribeImages allowed by its AWS Organizations SCP, or use an EC2 instance that has already been launched."
 }
 $RootDevice = (& $AwsCmd ec2 describe-images `
     --region $Region `
@@ -110,7 +147,15 @@ $ExistingKey = (& $AwsCmd ec2 describe-key-pairs --region $Region --key-names $K
 $KeyCheckExit = $LASTEXITCODE
 $ErrorActionPreference = $PrevEap
 
-if ($KeyCheckExit -ne 0 -or -not $ExistingKey -or -not (Test-Path $KeyFile)) {
+if ($ProvidedKeyFile) {
+    if ($KeyCheckExit -ne 0 -or -not $ExistingKey -or $ExistingKey.Trim() -eq "None") {
+        throw "The EC2 Key Pair '$KeyName' was not found in $Region. Create it in that region or use -KeyName with a matching existing pair."
+    }
+    if (-not (Test-Path $KeyFile)) {
+        throw "The private key file '$KeyFile' was not found."
+    }
+    Write-Host "    Reusing existing EC2 Key Pair '$KeyName' and PEM file: $KeyFile" -ForegroundColor Green
+} elseif ($KeyCheckExit -ne 0 -or -not $ExistingKey -or -not (Test-Path $KeyFile)) {
     if ($KeyCheckExit -eq 0 -and $ExistingKey) {
         & $AwsCmd ec2 delete-key-pair --region $Region --key-name $KeyName | Out-Null
     }
