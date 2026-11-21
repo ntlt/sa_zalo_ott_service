@@ -77,6 +77,11 @@ const DirectCallDialog: React.FC<Props> = ({
 
     let disposed = false;
     const setup = async () => {
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        setError("Cuộc gọi cần HTTPS để sử dụng microphone và camera.");
+        return;
+      }
+
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,

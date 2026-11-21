@@ -48,7 +48,11 @@ else
 fi
 
 echo "--- [EC2 4/4] Building & starting Docker Compose production stack ---"
-sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+sudo docker builder prune --all --force
+sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml build chatter-backend
+sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml build chatter-ui
+sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml build chatter-mobile
+sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-build
 
 echo "--- [EC2] Waiting for GraphQL health check ---"
 for i in $(seq 1 30); do

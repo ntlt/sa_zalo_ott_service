@@ -182,6 +182,12 @@ If you already have a running Ubuntu EC2 instance and `.pem` key:
 powershell -ExecutionPolicy Bypass -File .\scripts\deploy-to-ec2.ps1 -HostIp <EC2_PUBLIC_IP> -KeyPath <PATH_TO_KEY.pem>
 ```
 
+To provision with an existing EC2 Key Pair and matching local PEM file:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\provision-and-deploy-ec2.ps1 -Region ap-southeast-1 -KeyName khaing2000 -KeyFile C:\Users\Lenovo\Downloads\khaing2000.pem
+```
+
 When your class demo is finished and you want to tear down all AWS resources (`$0` ongoing cost):
 
 ```powershell
