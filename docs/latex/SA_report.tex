@@ -43,7 +43,7 @@
           {TP. Hồ Chí Minh, ngày 20 tháng 11 năm 2026}
 
 \begin{abstract}
-Nhóm xây dựng Chatter, hệ thống OTT nhắn tin giả lập Zalo gồm ứng dụng web (React), ứng dụng mobile (React Native/Expo) và backend Node.js (NestJS, GraphQL, Socket.IO, MongoDB). Hệ thống đáp ứng đủ ba nhóm chức năng của đề: quản lý tài khoản và nhóm; chat 1-1 và chat nhóm với text, ảnh, video, tài liệu, biểu cảm; thống kê hoạt động người dùng. Backend được thiết kế theo kiểu modular monolith phân lớp với các lớp đóng, triển khai bằng Docker lên AWS EC2 và release tự động hằng tuần bằng GitHub Actions. Hệ thống có 78 test tự động, trong đó 29 test end-to-end chứng minh từng yêu cầu của đề; tin nhắn tới người nhận sau khoảng 32\,ms. Báo cáo trình bày cách áp dụng nội dung Chương 1--4 của môn học, kèm số liệu coupling đo trên mã nguồn thật: ba trong tám module nằm trong vùng Instability nên tránh, và module \code{users} rơi vào ``zone of pain'' do thiếu trừu tượng.
+Nhóm xây dựng Chatter, hệ thống OTT nhắn tin giả lập Zalo gồm ứng dụng web (React), ứng dụng mobile (React Native/Expo) và backend Node.js (NestJS, GraphQL, Socket.IO, MongoDB). Hệ thống đáp ứng đủ ba nhóm chức năng của đề: quản lý tài khoản và nhóm; chat 1-1 và chat nhóm với text, ảnh, video, tài liệu, biểu cảm; thống kê hoạt động người dùng. Backend được thiết kế theo kiểu modular monolith phân lớp với các lớp đóng, triển khai bằng Docker lên AWS EC2 và release tự động hằng tuần bằng GitHub Actions. Hệ thống có 79 test tự động, trong đó 30 test end-to-end chứng minh từng yêu cầu của đề; tin nhắn tới người nhận sau khoảng 32\,ms. Báo cáo trình bày cách áp dụng nội dung Chương 1--4 của môn học, kèm số liệu coupling đo trên mã nguồn thật: ba trong tám module nằm trong vùng Instability nên tránh, và module \code{users} rơi vào ``zone of pain'' do thiếu trừu tượng.
 \end{abstract}
 
 \tableofcontents
@@ -144,28 +144,29 @@ Hệ thống có 3 tác nhân, 3 nhóm yêu cầu chức năng theo đề, và 6
       link/.style={draw=black!55},
       actor/.pic={\draw[black!70, thick] (0,0.62) circle (0.17) (0,0.45) -- (0,0) (-0.3,0.32) -- (0.3,0.32) (0,0) -- (-0.22,-0.38) (0,0) -- (0.22,-0.38);}]
     % system boundary
-    \draw[black!45, rounded corners=4pt] (-4.3,4.0) rectangle (4.7,-3.85);
+    \draw[black!45, rounded corners=4pt] (-4.3,4.0) rectangle (4.7,-4.85);
     \node[font=\small\bfseries, anchor=north west] at (-4.25,3.95) {Hệ thống Chatter};
     % actors
     \pic at (-6.2,1.3) {actor}; \node[font=\footnotesize, align=center] (uA) at (-6.2,0.55) {Người dùng};
-    \pic at (-6.2,-2.1) {actor}; \node[font=\footnotesize, align=center] (gA) at (-6.2,-2.85) {Trưởng/phó\\nhóm};
+    \pic at (-6.2,-2.9) {actor}; \node[font=\footnotesize, align=center] (gA) at (-6.2,-3.65) {Trưởng/phó\\nhóm};
     \pic at (6.6,0.2) {actor}; \node[font=\footnotesize, align=center] (aA) at (6.6,-0.55) {Quản trị\\hệ thống};
-    \coordinate (u) at (-5.85,1.55); \coordinate (g) at (-5.85,-1.85); \coordinate (a) at (6.25,0.45);
+    \coordinate (u) at (-5.85,1.55); \coordinate (g) at (-5.85,-2.65); \coordinate (a) at (6.25,0.45);
     % generalization: group admin is a user
-    \draw[-{Triangle[open, length=7pt, width=7pt]}, black!60] (-6.2,-1.35) -- (-6.2,0.3);
+    \draw[-{Triangle[open, length=7pt, width=7pt]}, black!60] (-6.2,-2.15) -- (-6.2,0.3);
     % user use cases
     \node[uc] (uc1) at (-1.9, 2.95) {Đăng ký, đăng nhập};
     \node[uc] (uc2) at (-1.9, 1.95) {Quản lý hồ sơ, danh bạ};
     \node[uc] (uc3) at (-1.9, 0.95) {Chat 1-1};
     \node[uc] (uc4) at (-1.9,-0.05) {Chat nhóm, tạo nhóm};
     \node[uc] (uc5) at (-1.9,-1.15) {Gửi text, ảnh, video,\\tài liệu, biểu cảm};
-    \node[uc] (uc6) at (-1.9,-2.25) {Xem thống kê cá nhân};
-    \node[uc] (uc7) at (-1.9,-3.25) {Quản lý thành viên nhóm};
+    \node[uc] (ucc) at (-1.9,-2.25) {Gọi thoại, gọi video 1-1};
+    \node[uc] (uc6) at (-1.9,-3.25) {Xem thống kê cá nhân};
+    \node[uc] (uc7) at (-1.9,-4.25) {Quản lý thành viên nhóm};
     % admin use cases
     \node[uc] (uc8) at (2.6, 1.3) {Khoá/mở, phân quyền\\tài khoản};
     \node[uc] (uc9) at (2.6, 0.1) {Xem và đóng nhóm};
     \node[uc] (uc10) at (2.6,-1.1) {Thống kê toàn hệ thống};
-    \foreach \t in {uc1,uc2,uc3,uc4,uc5,uc6} \draw[link] (u) -- (\t.west);
+    \foreach \t in {uc1,uc2,uc3,uc4,uc5,ucc,uc6} \draw[link] (u) -- (\t.west);
     \draw[link] (g) -- (uc7.west);
     \foreach \t in {uc8,uc9,uc10} \draw[link] (a) -- (\t.east);
   \end{tikzpicture}
@@ -336,7 +337,7 @@ Nhưng khác layered thuần, code được \textbf{chia theo nghiệp vụ trư
     \toprule
     \textbf{Kênh} & \textbf{Dùng cho} & \textbf{Lý do} \\
     \midrule
-    GraphQL \code{/graphql} (12 query, 22 mutation) & Mọi thao tác nghiệp vụ & Client lấy đúng trường cần trong một request; schema có kiểu, sinh từ code \\
+    GraphQL \code{/graphql} (13 query, 22 mutation) & Mọi thao tác nghiệp vụ & Client lấy đúng trường cần trong một request; schema có kiểu, sinh từ code \\
     REST multipart \code{/uploads} & Upload và tải file & File nhị phân không phải mã hoá vào JSON; video hỗ trợ HTTP Range để tua \\
     WebSocket (Socket.IO) & Server đẩy sự kiện chat, presence và signaling cuộc gọi & Chat và trạng thái cuộc gọi được cập nhật tức thì, không cần polling \\
     \bottomrule
@@ -346,7 +347,7 @@ Nhưng khác layered thuần, code được \textbf{chia theo nghiệp vụ trư
 \subsection{Mô hình dữ liệu}
 \label{sec:data}
 
-Dữ liệu gồm 6 collection MongoDB (Hình~\ref{fig:erd}). Quan hệ được giữ bằng id tham chiếu; riêng file đính kèm và cảm xúc được \emph{nhúng} trong tin nhắn vì luôn được đọc cùng tin.
+Dữ liệu gồm 7 collection MongoDB (Hình~\ref{fig:erd}). Quan hệ được giữ bằng id tham chiếu; riêng file đính kèm và cảm xúc được \emph{nhúng} trong tin nhắn vì luôn được đọc cùng tin.
 
 \begin{figure}[!htb]
   \centering
@@ -363,6 +364,8 @@ Dữ liệu gồm 6 collection MongoDB (Hình~\ref{fig:erd}). Quan hệ được
       \nodepart{second}\code{actorId} (FK)\\ \code{type}: 9 loại sự kiện\\ \code{conversationId}, \code{targetUserId}\\ \code{metadata} (không chứa nội dung)\\ \code{occurredAt}};
     \node[entity, anchor=north] (msgs) at (5.5,-2.0) {\textbf{messages}
       \nodepart{second}\code{\_id} (PK)\\ \code{conversationId} (FK)\\ \code{senderId} $\rightarrow$ users\\ \code{kind}: text | image | video |\\ \quad document | emotion | system\\ \code{text}, \code{stickerCode}\\ \code{attachments[]} (nhúng)\\ \code{reactions[]} (nhúng)\\ \code{replyToId} $\rightarrow$ messages\\ \code{deletedAt}, \code{deletedBy}};
+    \node[entity, anchor=north] (calls) at (-5.5,-4.55) {\textbf{callHistory}
+      \nodepart{second}\code{callId} (unique)\\ \code{conversationId} $\rightarrow$ conversations\\ \code{callerId}, \code{calleeId} $\rightarrow$ users\\ \code{mode}: audio | video\\ \code{outcome}: rejected | cancelled |\\ \quad hangup | timeout | disconnect\\ \code{startedAt}, \code{connectedAt}, \code{endedAt}\\ \code{durationSeconds}};
     % relations (1 -- N)
     \draw[rel] ($(users.north east)+(0,-0.75)$) -- node[card, pos=0.12, above] {1} node[card, pos=0.88, above] {N} ($(members.north west)+(0,-0.75)$);
     \draw[rel] ($(convs.north west)+(0,-0.75)$) -- node[card, pos=0.12, above] {1} node[card, pos=0.88, above] {N} ($(members.north east)+(0,-0.75)$);
@@ -370,7 +373,7 @@ Dữ liệu gồm 6 collection MongoDB (Hình~\ref{fig:erd}). Quan hệ được
     \draw[rel] (convs.south) -- node[card, pos=0.15, right] {1} node[card, pos=0.8, right] {N} (msgs.north);
     \draw[rel] (users.south east) -- node[card, pos=0.2, above right] {1} node[card, pos=0.85, above right] {N} (acts.north west);
   \end{tikzpicture}
-  \caption{ERD của 6 collection. PK: khoá chính, FK: id tham chiếu tới collection khác; ``$\rightarrow$'' là tham chiếu không vẽ đường để sơ đồ gọn. \code{contacts} có hai tham chiếu tới \code{users} (chủ danh bạ và người trong danh bạ).}
+  \caption{ERD của 7 collection; \code{callHistory} được thêm cùng tính năng gọi 1--1 và chỉ lưu thông tin cuộc gọi, không lưu âm thanh hay hình ảnh. PK: khoá chính, FK: id tham chiếu tới collection khác; ``$\rightarrow$'' là tham chiếu không vẽ đường để sơ đồ gọn. \code{contacts} có hai tham chiếu tới \code{users} (chủ danh bạ và người trong danh bạ).}
   \label{fig:erd}
 \end{figure}
 
@@ -387,6 +390,7 @@ Dữ liệu gồm 6 collection MongoDB (Hình~\ref{fig:erd}). Quan hệ được
     \code{conversationMembers} & Thành viên, vai trò, lần đọc cuối & Tách riêng để nhóm 100 người không làm document hội thoại phình to \\
     \code{messages} & Tin nhắn 5 loại & Cảm xúc nhúng trong tin; thu hồi bằng \code{deletedAt}; index \code{(conversationId, createdAt, \_id)} cho phân trang \\
     \code{userActivities} & Nhật ký hoạt động & Không lưu nội dung tin nhắn hay mật khẩu; nguồn cho thống kê \\
+    \code{callHistory} & Lịch sử cuộc gọi 1-1 & Chỉ ghi khi cuộc gọi kết thúc; trạng thái lúc đang gọi nằm trong bộ nhớ của \code{CallsService} \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -697,6 +701,8 @@ Nhận xét theo ngưỡng của Chương 3 ($I$ nên nằm trong 0--0,3 hoặc 
   \item \textbf{Vòng phụ thuộc:} \code{auth} $\leftrightarrow$ \code{activities}. \code{auth} ghi nhật ký đăng nhập vào \code{activities}, còn \code{activities} dùng guard của \code{auth}.
 \end{itemize}
 
+\paragraph{Đo lại sau khi thêm module \code{calls}.} Module \code{calls} phụ thuộc vào \code{auth}, \code{users}, \code{conversations} ($C_e = 3$) và không module nào phụ thuộc vào nó ($C_a = 0$, $I = 1{,}00$). Thêm tính năng gọi không phải sửa module chat nào: đây là OCP ở mức kiến trúc. Các module khác thay đổi nhẹ: \code{users} có $C_a = 7$, \code{auth} có $I = 0{,}25$, \code{conversations} có $I = 0{,}50$; nhận xét ở trên vẫn giữ nguyên.
+
 \paragraph{Abstractness và main sequence.} Backend không có abstract class hay interface hành vi nào; 11 interface/type đang có chỉ là kiểu dữ liệu. Vậy $A \approx 0$ cho mọi module, và khoảng cách tới main sequence~\cite{martin2017clean}
 \begin{equation}
   D = |A + I - 1| \approx 1 - I.
@@ -816,7 +822,7 @@ Mã nguồn gồm 3 ứng dụng trong một repo; backend hiện có 9 module n
 \section{Test}
 \label{sec:test}
 
-Hệ thống có 78 test tự động, tất cả đều pass và chạy lại ở mỗi lần push; mỗi yêu cầu của đề có ít nhất một test end-to-end chứng minh.
+Hệ thống có 79 test tự động, tất cả đều pass và chạy lại ở mỗi lần push; mỗi yêu cầu của đề có ít nhất một test end-to-end chứng minh.
 
 \begin{table}[H]
   \centering
@@ -828,7 +834,7 @@ Hệ thống có 78 test tự động, tất cả đều pass và chạy lại �
     \textbf{Tầng} & \textbf{Công cụ} & \textbf{Phạm vi} & \textbf{Số test} \\
     \midrule
     Unit (backend) & Vitest, mock qua DI & Service: tài khoản, xác thực, token, hội thoại, tin nhắn, thống kê, kiểm tra file & 43 \\
-    End-to-end (backend) & Vitest + HTTP + \code{socket.io-client}, MongoDB thật & Toàn bộ app qua API như người dùng thật: cả 3 nhóm yêu cầu, phân quyền, realtime & 29 \\
+    End-to-end (backend) & Vitest + HTTP + \code{socket.io-client}, MongoDB thật & Toàn bộ app qua API như người dùng thật: cả 3 nhóm yêu cầu, phân quyền, realtime, lịch sử cuộc gọi & 30 \\
     Component (web) & Jest + React Testing Library & Form đăng nhập/đăng ký, tạo chat 1-1 và nhóm & 6 \\
     \bottomrule
   \end{tabularx}
@@ -847,6 +853,7 @@ Hệ thống có 78 test tự động, tất cả đều pass và chạy lại �
     FR-2 Nhóm & Tạo nhóm, thêm thành viên, phó nhóm, đổi tên; thành viên bị xoá không đọc được nhóm; thành viên thường không xoá được trưởng nhóm; admin đóng nhóm \\
     FR-3 Chat (chạy cho cả 1-1 và nhóm) & Gửi text và thả cảm xúc; gửi ảnh, video, tài liệu và người kia tải về đúng từng byte; gửi sticker; người nhận thấy đủ 5 loại; chỉ người gửi thu hồi được; nhận tin realtime qua Socket.IO \\
     FR-4 Thống kê & Admin thấy số liệu cho cả 5 loại tin và 7 ngày; người thường bị từ chối; thống kê cá nhân đúng \\
+    Gọi 1-1 (mở rộng) & Sau một cuộc gọi trực tiếp, lịch sử cuộc gọi được lưu và cả hai thành viên đều đọc được \\
     Bảo mật & Từ chối file \code{.exe}, file \code{.exe} đổi tên thành \code{.png}, upload của người ngoài hội thoại; ngắt socket dùng token giả \\
     \bottomrule
   \end{tabularx}
@@ -893,11 +900,11 @@ Script \code{scripts/provision-and-deploy-ec2.ps1} tạo toàn bộ hạ tầng 
 \subsection{CI/CD trên GitHub Actions}
 \textbf{CI} (\code{.github/workflows/ci.yml}) chạy ở mọi lần push và pull request. Ba job chạy song song, mỗi job khoảng 45 giây:
 \begin{enumerate}
-  \item Backend: cài dependency $\rightarrow$ lint $\rightarrow$ 43 unit test $\rightarrow$ 29 test end-to-end (GitHub bật sẵn một MongoDB tạm) $\rightarrow$ build.
+  \item Backend: cài dependency $\rightarrow$ lint $\rightarrow$ 43 unit test $\rightarrow$ 30 test end-to-end (GitHub bật sẵn một MongoDB tạm) $\rightarrow$ build.
   \item Frontend: cài dependency $\rightarrow$ kiểm tra TypeScript $\rightarrow$ 6 test $\rightarrow$ build.
   \item Docker: kiểm tra file Compose $\rightarrow$ build image backend và frontend (chạy sau khi hai job trên pass).
 \end{enumerate}
-Cả hai lần CI đã chạy trên nhánh \code{feature/sa\_hungnlh} đều pass.
+Các lần CI gần nhất trên nhánh \code{feature/sa\_hungnlh} và \code{main} đều pass.
 
 \textbf{Release hằng tuần} (\code{.github/workflows/weekly-release.yml}) tự chạy lúc 10:00 thứ Sáu (giờ Việt Nam), hoặc chạy tay từ tab Actions:
 \begin{enumerate}
@@ -919,7 +926,7 @@ Cả hai lần CI đã chạy trên nhánh \code{feature/sa\_hungnlh} đều pas
     % CI lane
     \node[font=\small\bfseries, anchor=west] at (-1.3,1.7) {CI (\code{ci.yml}): mọi push và pull request};
     \node[start] (push) at (0,0) {push /\\pull request};
-    \node[cstep] (be) at (3.4,0.62) {Backend: lint, 43 unit, 29 e2e, build};
+    \node[cstep] (be) at (3.4,0.62) {Backend: lint, 43 unit, 30 e2e, build};
     \node[cstep] (fe) at (3.4,-0.75) {Frontend: tsc, 6 test, build};
     \node[cstep] (dk) at (6.8,0) {Build Docker image};
     \node[ok] (cipass) at (10.2,0) {CI pass};
